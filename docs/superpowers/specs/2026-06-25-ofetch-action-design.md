@@ -53,16 +53,19 @@ Small, isolated, independently testable modules:
 ```ts
 interface CoreLike {
   getInput(name: string, opts?: { required?: boolean }): string;
-  getBooleanInput(name: string): boolean;
   setOutput(name: string, value: string): void;
   setFailed(message: string): void;
   setSecret(value: string): void;
   info(message: string): void;
   debug(message: string): void;
+  warning(message: string): void;
 }
 
 async function run(core: CoreLike, fetch: typeof import("ofetch").ofetch): Promise<void>;
 ```
+
+Booleans are parsed from `getInput` ourselves (not `getBooleanInput`) so that
+optional booleans default to `false` when absent instead of throwing.
 
 `src/index.ts` calls `run(core, ofetch)` with the real implementations.
 
@@ -125,9 +128,11 @@ masked in logs.
 
 Precedence: `file` > `files` > `body`.
 
-1. **`file` present** → body = `fs.createReadStream(file)`; set
-   `Content-Type: application/octet-stream` and `Content-Length` from file size.
-   _(Fixes #226 — octet-stream headers were dropped by the reference action.)_
+1. **`file` present** → body = `await readFile(file)` (a `Buffer`); set
+   `Content-Type: application/octet-stream`. ofetch does not re-serialize a Buffer
+   (it has `.buffer`), and undici sets `Content-Length` automatically from the
+   Buffer length. _(Fixes #226 — octet-stream headers were dropped by the
+   reference action.)_
 2. **`files` present** → build a `FormData`:
    - For each field whose value is a string: append the file once.
    - For each field whose value is an **array**: append every path under the same
@@ -143,15 +148,24 @@ Precedence: `file` > `files` > `body`.
 
 ## Failure semantics
 
-`run()` always calls ofetch with `ignoreResponseError: true` so it gets a response
-object regardless of status, then decides failure itself:
+`run()` lets ofetch perform its normal flow (retry-then-throw) and decides
+failure in a `catch`. **It does not set `ignoreResponseError` globally** —
+ofetch's retry on `retryStatusCodes` only runs on its error path, so forcing
+`ignoreResponseError: true` would silently disable status-based retries
+(verified in ofetch source). Flow:
 
-- **Non-2xx status** → fail the action, **unless** the code is in
-  `ignoreStatusCodes` or `ignoreResponseError` is true.
-- **No response (network error / timeout exhaustion)** → fail, **unless**
-  `preventFailureOnNoResponse` is true.
-- On any handled outcome, set `response` / `headers` / `status` when available, and
-  set `requestError` on failure.
+- **Success (status < 400)** → `fetch.raw` resolves; set `response` / `headers` /
+  `status`.
+- **HTTP error (status ≥ 400, after retries)** → `fetch.raw` throws a
+  `FetchError` carrying `.response`, `.status`, `.data`. Extract status / headers /
+  body from it and set the outputs. Fail the action **unless** the status is in
+  `ignoreStatusCodes`. Set `requestError` when failing.
+- **No response (network error / timeout)** → thrown error has no `.response`.
+  Set `requestError`; fail **unless** `preventFailureOnNoResponse` is true (then
+  `core.warning`).
+- **`ignoreResponseError: true` input** → passed through to ofetch so it never
+  throws on status (status-based retry is intentionally skipped, matching ofetch
+  semantics); outputs are set and the action never fails on status.
 
 Retries (`retry`, `retryDelay`, `retryStatusCodes`) and `timeout` are handled by
 ofetch natively.
@@ -170,7 +184,7 @@ the README** with an example of setting them on the step `env`.
 - `body`:
   - raw JSON string passthrough — no double-escape (**#182**).
   - multipart `FormData` from a files map including an array value (**#120**).
-  - single file → `application/octet-stream` + `Content-Length` (**#226**).
+  - single file → `Content-Type: application/octet-stream` + body is a `Buffer` (**#226**); the over-the-wire `Content-Length` is asserted in the integration test.
   - merge of scalar body fields into multipart.
 - `request`: full option assembly — bearer/basic auth headers, query, retry,
   retryStatusCodes parsing, responseType.
