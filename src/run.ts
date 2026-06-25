@@ -78,11 +78,11 @@ export async function run(core: CoreLike, fetch: typeof import("ofetch").ofetch)
         core.setFailed(`Request to ${url} failed with status ${status}`);
         return;
       }
-      core.setOutput("requestError", serializeError(fetchError));
       if (inputs.preventFailureOnNoResponse) {
         core.warning(`No response received: ${fetchError.message}`);
         return;
       }
+      core.setOutput("requestError", serializeError(fetchError));
       core.setFailed(fetchError.message);
     }
   } catch (error) {

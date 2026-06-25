@@ -80,6 +80,7 @@ describe("run — HTTP error", () => {
     await run(core, fetch);
     expect(core.failed).toBeUndefined();
     expect(core.outputs.status).toBe("404");
+    expect(core.outputs.requestError).toBeUndefined();
   });
 });
 
@@ -106,5 +107,6 @@ describe("run — network error", () => {
     await run(core, fetch);
     expect(core.failed).toBeUndefined();
     expect(core.warnings.length).toBe(1);
+    expect(core.outputs.requestError).toBeUndefined();
   });
 });
