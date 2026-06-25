@@ -22,8 +22,22 @@ export async function buildBody(inputs: ActionInputs): Promise<BodyResult> {
   if (inputs.files) {
     const form = new FormData();
     if (inputs.body) {
-      const fields = JSON.parse(inputs.body) as Record<string, unknown>;
+      const badBodyMsg = '"body" must be a JSON object of scalar fields when "files" is set';
+      let fields: Record<string, unknown>;
+      try {
+        const parsed: unknown = JSON.parse(inputs.body);
+        if (parsed === null || Array.isArray(parsed) || typeof parsed !== "object") {
+          throw new Error(badBodyMsg);
+        }
+        fields = parsed as Record<string, unknown>;
+      } catch (err) {
+        if (err instanceof Error && err.message === badBodyMsg) throw err;
+        throw new Error(badBodyMsg);
+      }
       for (const [key, value] of Object.entries(fields)) {
+        if (typeof value !== "string" && typeof value !== "number" && typeof value !== "boolean") {
+          throw new Error(`"body" field "${key}" must be a scalar value when "files" is set`);
+        }
         form.append(key, String(value));
       }
     }

@@ -74,6 +74,18 @@ describe("buildBody — multipart (#120)", () => {
     expect(form.get("jobId")).toBe("42");
     expect((form.getAll("f")[0] as File).name).toBe("a.html");
   });
+
+  it("rejects malformed body JSON when files are set", async () => {
+    await expect(buildBody(baseInputs({ files: { f: fileA }, body: "not json" }))).rejects.toThrow(
+      /JSON object of scalar fields/,
+    );
+  });
+
+  it("rejects non-scalar field values when files are set", async () => {
+    await expect(
+      buildBody(baseInputs({ files: { f: fileA }, body: '{"tags":["a","b"]}' })),
+    ).rejects.toThrow(/scalar value/);
+  });
 });
 
 describe("buildBody — empty", () => {
