@@ -10,7 +10,35 @@ jobs:
         with: { node-version: lts/*, cache: "pnpm" }
       - run: pnpm install
       - run: pnpm typecheck
-      - run: pnpm vitest --coverage
+      - run: pnpm vitest run --coverage
       - run: pnpm run lint
-      # - uses: codecov/codecov-action@v5
-      #   with: { token: "${{ secrets.CODECOV_TOKEN }}" }
+      - run: pnpm build
+      - name: Verify dist is up to date
+        run: |
+          if ! git diff --exit-code -- dist; then
+            echo "::error::dist is out of date. Run 'pnpm build' and commit the result."
+            exit 1
+          fi
+
+  self-test:
+    needs: checks
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: [self-hosted]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Start echo server
+        run: |
+          node -e 'require("http").createServer((q,s)=>{let b=[];q.on("data",c=>b.push(c));q.on("end",()=>{s.writeHead(200,{"content-type":"application/json"});s.end(JSON.stringify({ok:true,method:q.method}))})}).listen(8080,"127.0.0.1",()=>console.log("up"))' &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/ >/dev/null && break || sleep 0.25; done
+      - name: Use the action
+        id: req
+        uses: ./
+        with:
+          url: http://127.0.0.1:8080/
+          method: POST
+          body: '{"hello":"world"}'
+      - name: Assert outputs
+        run: |
+          echo "status=${{ steps.req.outputs.status }}"
+          test "${{ steps.req.outputs.status }}" = "200"
+          echo '${{ steps.req.outputs.response }}' | grep -q '"ok":true'
