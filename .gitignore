@@ -1,0 +1,8 @@
+node_modules
+coverage
+.vscode
+.DS_Store
+.eslintcache
+tsconfig.tsbuildinfo
+*.log*
+*.env*
