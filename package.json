@@ -1,43 +1,36 @@
 {
-  "name": "packageName",
+  "name": "ofetch-action",
   "version": "0.0.0",
-  "description": "",
+  "description": "GitHub Action for HTTP requests powered by unjs/ofetch",
   "license": "MIT",
-  "repository": "unjs/packageName",
+  "repository": "marr-cloud/ofetch-action",
   "files": [
     "dist"
   ],
   "type": "module",
   "sideEffects": false,
-  "types": "./dist/index.d.mts",
-  "exports": {
-    ".": "./dist/index.mjs"
-  },
   "scripts": {
     "build": "obuild",
     "dev": "vitest dev",
     "fmt": "automd && oxlint . --fix && oxfmt .",
     "lint": "oxlint . && oxfmt --check .",
-    "prepack": "pnpm build",
-    "release": "pnpm test && pnpm build && changelogen --release && npm publish && git push --follow-tags",
     "test": "pnpm lint && pnpm typecheck && vitest run --coverage",
     "typecheck": "tsgo --noEmit --skipLibCheck"
   },
+  "dependencies": {},
   "devDependencies": {
+    "@actions/core": "^3.0.1",
     "@types/node": "latest",
     "@typescript/native-preview": "latest",
     "@vitest/coverage-v8": "latest",
     "automd": "latest",
     "changelogen": "latest",
     "obuild": "latest",
+    "ofetch": "^1.5.1",
     "oxfmt": "latest",
     "oxlint": "latest",
     "typescript": "latest",
     "vitest": "latest"
   },
-  "packageManager": "pnpm@10.33.2",
-  "dependencies": {
-    "@actions/core": "^3.0.1",
-    "ofetch": "^1.5.1"
-  }
+  "packageManager": "pnpm@10.33.2"
 }

@@ -40,13 +40,13 @@ exposing most of ofetch's options with a native, idiomatic naming and modern too
 
 Small, isolated, independently testable modules:
 
-| File | Responsibility | Depends on |
-|---|---|---|
-| `src/index.ts` | Thin entry. Wires real `@actions/core` + `ofetch` and calls `run()`. Bundle entrypoint. | core, ofetch, run |
-| `src/inputs.ts` | Read & validate all inputs from env, return typed `ActionInputs`. Parse helpers (JSON object, CSV list, boolean). | `@actions/core` |
-| `src/body.ts` | Body assembly: raw-string passthrough, multipart `FormData`, octet-stream. Home of the issue fixes. | `node:fs` |
-| `src/request.ts` | Pure function building ofetch call options from `ActionInputs` (auth→headers, query, retry, timeout, retryStatusCodes, responseType). | body |
-| `src/run.ts` | Orchestration: inputs → options → `ofetch.raw` → response/error handling → outputs / responseFile / mask. Receives injected `fetch` + `core` for testability. | request |
+| File             | Responsibility                                                                                                                                                | Depends on        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| `src/index.ts`   | Thin entry. Wires real `@actions/core` + `ofetch` and calls `run()`. Bundle entrypoint.                                                                       | core, ofetch, run |
+| `src/inputs.ts`  | Read & validate all inputs from env, return typed `ActionInputs`. Parse helpers (JSON object, CSV list, boolean).                                             | `@actions/core`   |
+| `src/body.ts`    | Body assembly: raw-string passthrough, multipart `FormData`, octet-stream. Home of the issue fixes.                                                           | `node:fs`         |
+| `src/request.ts` | Pure function building ofetch call options from `ActionInputs` (auth→headers, query, retry, timeout, retryStatusCodes, responseType).                         | body              |
+| `src/run.ts`     | Orchestration: inputs → options → `ofetch.raw` → response/error handling → outputs / responseFile / mask. Receives injected `fetch` + `core` for testability. | request           |
 
 ### `run()` signature (dependency injection)
 
@@ -73,27 +73,27 @@ optional booleans default to `false` when absent instead of throwing.
 
 ### Core
 
-| Input | Type | Default | Notes |
-|---|---|---|---|
-| `url` | string | — (required) | Request URL (absolute, or relative to `baseURL`). |
-| `method` | string | `GET` | HTTP method. |
-| `baseURL` | string | — | Prepended to `url` with slash handling. |
-| `body` | string | — | Request body. Sent **as-is** (see Body handling). |
-| `query` | JSON object string | — | Query params, e.g. `'{"page":"1"}'`. |
-| `headers` | JSON object string | — | Extra request headers. |
-| `contentType` | string | `application/json` (for body-bearing methods) | Sets `Content-Type`. Ignored for multipart/octet-stream paths. |
-| `timeout` | number (ms) | — | Aborts the request after N ms. |
-| `retry` | number | ofetch default | Retry attempts. |
-| `retryDelay` | number (ms) | ofetch default | Delay between retries. |
-| `retryStatusCodes` | CSV | ofetch default | e.g. `429,500,503`. |
-| `responseType` | `json` \| `text` | auto | Forces body parsing. Auto-detects when unset. |
-| `ignoreResponseError` | boolean | `false` | Never fail on non-2xx; still set outputs. |
+| Input                 | Type               | Default                                       | Notes                                                          |
+| --------------------- | ------------------ | --------------------------------------------- | -------------------------------------------------------------- |
+| `url`                 | string             | — (required)                                  | Request URL (absolute, or relative to `baseURL`).              |
+| `method`              | string             | `GET`                                         | HTTP method.                                                   |
+| `baseURL`             | string             | —                                             | Prepended to `url` with slash handling.                        |
+| `body`                | string             | —                                             | Request body. Sent **as-is** (see Body handling).              |
+| `query`               | JSON object string | —                                             | Query params, e.g. `'{"page":"1"}'`.                           |
+| `headers`             | JSON object string | —                                             | Extra request headers.                                         |
+| `contentType`         | string             | `application/json` (for body-bearing methods) | Sets `Content-Type`. Ignored for multipart/octet-stream paths. |
+| `timeout`             | number (ms)        | —                                             | Aborts the request after N ms.                                 |
+| `retry`               | number             | ofetch default                                | Retry attempts.                                                |
+| `retryDelay`          | number (ms)        | ofetch default                                | Delay between retries.                                         |
+| `retryStatusCodes`    | CSV                | ofetch default                                | e.g. `429,500,503`.                                            |
+| `responseType`        | `json` \| `text`   | auto                                          | Forces body parsing. Auto-detects when unset.                  |
+| `ignoreResponseError` | boolean            | `false`                                       | Never fail on non-2xx; still set outputs.                      |
 
 ### Auth
 
-| Input | Notes |
-|---|---|
-| `bearerToken` | → `Authorization: Bearer <token>`. |
+| Input                   | Notes                                       |
+| ----------------------- | ------------------------------------------- |
+| `bearerToken`           | → `Authorization: Bearer <token>`.          |
 | `username` + `password` | → `Authorization: Basic base64(user:pass)`. |
 
 `bearerToken`/`password` are registered as secrets (`core.setSecret`) so they are
@@ -101,27 +101,27 @@ masked in logs.
 
 ### File uploads
 
-| Input | Notes |
-|---|---|
+| Input   | Notes                                                                                                                             |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `files` | JSON map of field → path **or array of paths**. Sent as `multipart/form-data`. Other `body` JSON fields are merged into the form. |
-| `file` | Single file path. Sent as `application/octet-stream` with correct `Content-Type` + `Content-Length`. |
+| `file`  | Single file path. Sent as `application/octet-stream` with correct `Content-Type` + `Content-Length`.                              |
 
 ### Convenience
 
-| Input | Notes |
-|---|---|
-| `responseFile` | Persist the response body to this path. |
-| `maskResponse` | boolean. Emits `::add-mask::` for the response value. |
-| `ignoreStatusCodes` | CSV of codes treated as success (no action failure). |
+| Input                        | Notes                                                        |
+| ---------------------------- | ------------------------------------------------------------ |
+| `responseFile`               | Persist the response body to this path.                      |
+| `maskResponse`               | boolean. Emits `::add-mask::` for the response value.        |
+| `ignoreStatusCodes`          | CSV of codes treated as success (no action failure).         |
 | `preventFailureOnNoResponse` | boolean. Network errors (no response) don't fail the action. |
 
 ## Outputs
 
-| Output | Description |
-|---|---|
-| `response` | Response body. Parsed JSON → JSON string; text → raw string. |
-| `headers` | Response headers as a JSON string. |
-| `status` | Numeric HTTP status code. |
+| Output         | Description                                                                                                                                                                                                                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `response`     | Response body. Parsed JSON → JSON string; text → raw string.                                                                                                                                                                                                            |
+| `headers`      | Response headers as a JSON string.                                                                                                                                                                                                                                      |
+| `status`       | Numeric HTTP status code.                                                                                                                                                                                                                                               |
 | `requestError` | On failure: JSON string `{ name, message, status, data }` derived from `FetchError`. Named `requestError` for clarity and migration parity with http-request-action; outputs are step-scoped (`steps.<id>.outputs.requestError`) so there is no cross-action collision. |
 
 ## Body handling (resolves the three issues)
@@ -192,6 +192,7 @@ the README** with an example of setting them on the step `env`.
 ### Integration (real network to a local server)
 
 A throwaway `node:http` echo server (started in `beforeAll`) that:
+
 - echoes method, headers, and body back;
 - returns a chosen status code;
 - can delay responses (timeout testing);

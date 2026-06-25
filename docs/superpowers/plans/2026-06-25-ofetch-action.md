@@ -24,25 +24,25 @@
 
 ## File Structure
 
-| File | Responsibility |
-|---|---|
-| `src/index.ts` | Thin entry. Wires real `@actions/core` + `ofetch`, calls `run`. Bundle entrypoint. |
-| `src/inputs.ts` | `ActionInputs` type, pure parse helpers, `readInputs(core)`. |
-| `src/body.ts` | `BodyResult` type, `buildBody(inputs)` — raw string / multipart / octet-stream. |
-| `src/request.ts` | `BuiltRequest` type, `buildRequest(inputs)` — ofetch options + auth headers. |
-| `src/run.ts` | `CoreLike` type, `run(core, fetch)` — orchestration, pass/fail, outputs. |
-| `test/inputs.test.ts` | Unit tests for parse helpers + `readInputs`. |
-| `test/body.test.ts` | Unit tests for `buildBody` (covers #182, #226, #120). |
-| `test/request.test.ts` | Unit tests for `buildRequest`. |
-| `test/run.test.ts` | Unit tests for `run` with fake core + fake fetch. |
-| `test/integration.test.ts` | Real ofetch + local echo server (wire format + end-to-end run). |
-| `test/helpers/server.ts` | Ephemeral `node:http` echo/control server for integration tests. |
-| `test/helpers/fake-core.ts` | `FakeCore` implementing `CoreLike` for unit tests. |
-| `action.yml` | Full inputs/outputs + branding. |
-| `build.config.ts` | obuild bundle config (self-contained dist, no dts). |
-| `.github/workflows/checks.yml` | lint + typecheck + test + build + dist-sync; self-test job on self-hosted runner. |
-| `README.md`, `AGENTS.md` | Docs. |
-| `package.json` | name, repository, deps layout. |
+| File                           | Responsibility                                                                     |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| `src/index.ts`                 | Thin entry. Wires real `@actions/core` + `ofetch`, calls `run`. Bundle entrypoint. |
+| `src/inputs.ts`                | `ActionInputs` type, pure parse helpers, `readInputs(core)`.                       |
+| `src/body.ts`                  | `BodyResult` type, `buildBody(inputs)` — raw string / multipart / octet-stream.    |
+| `src/request.ts`               | `BuiltRequest` type, `buildRequest(inputs)` — ofetch options + auth headers.       |
+| `src/run.ts`                   | `CoreLike` type, `run(core, fetch)` — orchestration, pass/fail, outputs.           |
+| `test/inputs.test.ts`          | Unit tests for parse helpers + `readInputs`.                                       |
+| `test/body.test.ts`            | Unit tests for `buildBody` (covers #182, #226, #120).                              |
+| `test/request.test.ts`         | Unit tests for `buildRequest`.                                                     |
+| `test/run.test.ts`             | Unit tests for `run` with fake core + fake fetch.                                  |
+| `test/integration.test.ts`     | Real ofetch + local echo server (wire format + end-to-end run).                    |
+| `test/helpers/server.ts`       | Ephemeral `node:http` echo/control server for integration tests.                   |
+| `test/helpers/fake-core.ts`    | `FakeCore` implementing `CoreLike` for unit tests.                                 |
+| `action.yml`                   | Full inputs/outputs + branding.                                                    |
+| `build.config.ts`              | obuild bundle config (self-contained dist, no dts).                                |
+| `.github/workflows/checks.yml` | lint + typecheck + test + build + dist-sync; self-test job on self-hosted runner.  |
+| `README.md`, `AGENTS.md`       | Docs.                                                                              |
+| `package.json`                 | name, repository, deps layout.                                                     |
 
 The starter's placeholder `src/index.ts` and `test/index.test.ts` are replaced; delete `test/index.test.ts` in Task 1.
 
@@ -51,12 +51,14 @@ The starter's placeholder `src/index.ts` and `test/index.test.ts` are replaced; 
 ## Task 1: Tooling & build config for a self-contained action
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `build.config.ts`
 - Delete: `test/index.test.ts`
 - Modify: `src/index.ts` (temporary minimal entry, replaced in Task 7)
 
 **Interfaces:**
+
 - Produces: a working toolchain — `pnpm build` emits a self-contained `dist/index.mjs` with `ofetch`/`@actions/core` inlined.
 
 - [ ] **Step 1: Move runtime deps to devDependencies and set package metadata**
@@ -70,9 +72,7 @@ Replace `package.json` with:
   "description": "GitHub Action for HTTP requests powered by unjs/ofetch",
   "license": "MIT",
   "repository": "marr-cloud/ofetch-action",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "type": "module",
   "sideEffects": false,
   "scripts": {
@@ -167,10 +167,12 @@ git commit -m "chore: configure self-contained action build (bundle runtime deps
 ## Task 2: Input parse helpers (`src/inputs.ts`)
 
 **Files:**
+
 - Create: `src/inputs.ts`
 - Test: `test/inputs.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `parseBoolean(value: string): boolean`
   - `parseNumber(value: string, name: string): number | undefined`
@@ -317,7 +319,9 @@ export function parseFiles(value: string): Record<string, string | string[]> | u
     } else if (Array.isArray(val) && val.every((p) => typeof p === "string")) {
       result[key] = val as string[];
     } else {
-      throw new Error(`Invalid "files" entry "${key}": expected a path string or array of path strings`);
+      throw new Error(
+        `Invalid "files" entry "${key}": expected a path string or array of path strings`,
+      );
     }
   }
   return result;
@@ -342,10 +346,12 @@ git commit -m "feat: add input parse helpers"
 ## Task 2b: `ActionInputs` + `readInputs` (`src/inputs.ts`)
 
 **Files:**
+
 - Modify: `src/inputs.ts`
 - Test: `test/inputs.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `interface ActionInputs` (fields below)
   - `interface InputReader { getInput(name: string, options?: { required?: boolean }): string }`
@@ -533,10 +539,12 @@ git commit -m "feat: parse action inputs into typed config"
 ## Task 3: Body assembly (`src/body.ts`)
 
 **Files:**
+
 - Create: `src/body.ts`
 - Test: `test/body.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ActionInputs` from `src/inputs.ts`.
 - Produces:
   - `interface BodyResult { body?: string | Buffer | FormData; headers: Record<string, string> }`
@@ -590,7 +598,9 @@ describe("buildBody — raw string (#182)", () => {
   });
 
   it("honours a custom contentType", async () => {
-    const result = await buildBody(baseInputs({ body: "k=v", contentType: "application/x-www-form-urlencoded" }));
+    const result = await buildBody(
+      baseInputs({ body: "k=v", contentType: "application/x-www-form-urlencoded" }),
+    );
     expect(result.headers["content-type"]).toBe("application/x-www-form-urlencoded");
   });
 });
@@ -710,10 +720,12 @@ git commit -m "feat: assemble request bodies (raw, multipart, octet-stream)"
 ## Task 4: Request assembly (`src/request.ts`)
 
 **Files:**
+
 - Create: `src/request.ts`
 - Test: `test/request.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ActionInputs` (Task 2b), `buildBody` (Task 3).
 - Produces:
   - `interface BuiltRequest { url: string; options: import("ofetch").FetchOptions }`
@@ -779,7 +791,9 @@ describe("buildRequest", () => {
   });
 
   it("prefers bearer over basic", async () => {
-    const { options } = await buildRequest(baseInputs({ bearerToken: "tok", username: "u", password: "p" }));
+    const { options } = await buildRequest(
+      baseInputs({ bearerToken: "tok", username: "u", password: "p" }),
+    );
     expect((options.headers as Record<string, string>)["authorization"]).toBe("Bearer tok");
   });
 
@@ -870,11 +884,13 @@ git commit -m "feat: build ofetch request options with auth headers"
 ## Task 5: Orchestration (`src/run.ts`)
 
 **Files:**
+
 - Create: `src/run.ts`
 - Create: `test/helpers/fake-core.ts`
 - Test: `test/run.test.ts`
 
 **Interfaces:**
+
 - Consumes: `readInputs` (Task 2b), `buildRequest` (Task 4).
 - Produces:
   - `interface CoreLike` (superset of `InputReader` with `setOutput`, `setFailed`, `setSecret`, `info`, `debug`, `warning`)
@@ -983,7 +999,11 @@ describe("run — HTTP error", () => {
       name: "FetchError",
       status: 404,
       data: { error: "missing" },
-      response: { status: 404, headers: new Headers({ "x-test": "1" }), _data: { error: "missing" } },
+      response: {
+        status: 404,
+        headers: new Headers({ "x-test": "1" }),
+        _data: { error: "missing" },
+      },
     });
   }
 
@@ -996,7 +1016,10 @@ describe("run — HTTP error", () => {
     expect(core.failed).toMatch(/404/);
     expect(core.outputs.status).toBe("404");
     expect(core.outputs.response).toBe('{"error":"missing"}');
-    expect(JSON.parse(core.outputs.requestError)).toMatchObject({ status: 404, name: "FetchError" });
+    expect(JSON.parse(core.outputs.requestError)).toMatchObject({
+      status: 404,
+      name: "FetchError",
+    });
   });
 
   it("does not fail when the status is in ignoreStatusCodes", async () => {
@@ -1105,7 +1128,13 @@ export async function run(core: CoreLike, fetch: typeof import("ofetch").ofetch)
 
     try {
       const response = await fetch.raw(url, options);
-      await emitResponse(core, inputs, response.status, headersToObject(response.headers), response._data);
+      await emitResponse(
+        core,
+        inputs,
+        response.status,
+        headersToObject(response.headers),
+        response._data,
+      );
     } catch (error) {
       const fetchError = error as IFetchError;
       if (fetchError.response) {
@@ -1157,10 +1186,12 @@ git commit -m "feat: orchestrate request, failure handling, and outputs"
 ## Task 6: Entry, action metadata, and committed dist
 
 **Files:**
+
 - Modify: `src/index.ts`
 - Modify: `action.yml`
 
 **Interfaces:**
+
 - Consumes: `run` (Task 5).
 
 - [ ] **Step 1: Implement the real entry**
@@ -1279,9 +1310,11 @@ Expected: `dist/index.mjs` regenerated.
 - [ ] **Step 4: Verify the entry runs and reads inputs**
 
 Run:
+
 ```bash
 INPUT_URL="https://example.com" node -e "import('./dist/index.mjs').catch(e=>{console.error(e);process.exit(1)})"
 ```
+
 Expected: the process runs and exits 0 (a real GET to example.com returns 200). If the sandbox has no network, instead expect a non-crash failure message mentioning the request — that still proves the entry wires inputs → run. Network-dependent assertions live in Task 7.
 
 - [ ] **Step 5: Typecheck**
@@ -1302,10 +1335,12 @@ git commit -m "feat: wire action entry, metadata, and build dist"
 ## Task 7: Integration tests (real ofetch + echo server)
 
 **Files:**
+
 - Create: `test/helpers/server.ts`
 - Create: `test/integration.test.ts`
 
 **Interfaces:**
+
 - Consumes: `run` (Task 5), `buildRequest` (Task 4), real `ofetch`.
 - Produces: `startServer(): Promise<TestServer>` with `{ url, requests, flakyFailures, close }`.
 
@@ -1343,7 +1378,12 @@ export async function startServer(): Promise<TestServer> {
     req.on("end", () => {
       const body = Buffer.concat(chunks);
       const url = new URL(req.url ?? "/", "http://localhost");
-      requests.push({ method: req.method ?? "GET", path: url.pathname, headers: req.headers, body });
+      requests.push({
+        method: req.method ?? "GET",
+        path: url.pathname,
+        headers: req.headers,
+        body,
+      });
 
       if (url.pathname === "/flaky") {
         if (state.flakyFailures > 0) {
@@ -1397,7 +1437,9 @@ export async function startServer(): Promise<TestServer> {
       state.flakyFailures = n;
     },
     close: () =>
-      new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve()))),
+      new Promise<void>((resolve, reject) =>
+        server.close((err) => (err ? reject(err) : resolve())),
+      ),
   };
 }
 ```
@@ -1584,6 +1626,7 @@ git commit -m "test: add integration suite with local echo server"
 ## Task 8: CI workflow, README, and AGENTS.md
 
 **Files:**
+
 - Modify: `.github/workflows/checks.yml`
 - Modify: `README.md`
 - Modify: `AGENTS.md`
@@ -1669,37 +1712,37 @@ A GitHub Action for making HTTP requests, powered by [unjs/ofetch](https://githu
 
 ## Inputs
 
-| Input | Default | Description |
-|---|---|---|
-| `url` (required) | — | Request URL (absolute, or relative to `baseURL`). |
-| `method` | `GET` | HTTP method. |
-| `baseURL` | — | Base URL prepended to `url`. |
-| `body` | — | Request body. Sent as-is — a JSON string is **not** re-encoded. |
-| `query` | — | Query params as a JSON object string, e.g. `'{"page":"1"}'`. |
-| `headers` | — | Extra headers as a JSON object string. |
-| `contentType` | `application/json` | `Content-Type` for the body. |
-| `timeout` | — | Timeout in milliseconds. |
-| `retry` | — | Retry attempts on failure. |
-| `retryDelay` | — | Delay between retries (ms). |
-| `retryStatusCodes` | — | Comma-separated codes that trigger a retry, e.g. `429,500,503`. |
-| `responseType` | auto | Force `json` or `text`. |
-| `ignoreResponseError` | `false` | Don't fail on non-2xx (also skips status-based retry). |
-| `bearerToken` | — | Bearer token (no `Bearer ` prefix). |
-| `username` / `password` | — | Basic authentication. |
-| `files` | — | JSON map of field → path or array of paths (multipart/form-data). |
-| `file` | — | Single file path (application/octet-stream). |
-| `responseFile` | — | Persist the response body to this path. |
-| `maskResponse` | `false` | Mask the response value in logs. |
-| `ignoreStatusCodes` | — | Comma-separated codes treated as success. |
-| `preventFailureOnNoResponse` | `false` | Don't fail on a network error. |
+| Input                        | Default            | Description                                                       |
+| ---------------------------- | ------------------ | ----------------------------------------------------------------- |
+| `url` (required)             | —                  | Request URL (absolute, or relative to `baseURL`).                 |
+| `method`                     | `GET`              | HTTP method.                                                      |
+| `baseURL`                    | —                  | Base URL prepended to `url`.                                      |
+| `body`                       | —                  | Request body. Sent as-is — a JSON string is **not** re-encoded.   |
+| `query`                      | —                  | Query params as a JSON object string, e.g. `'{"page":"1"}'`.      |
+| `headers`                    | —                  | Extra headers as a JSON object string.                            |
+| `contentType`                | `application/json` | `Content-Type` for the body.                                      |
+| `timeout`                    | —                  | Timeout in milliseconds.                                          |
+| `retry`                      | —                  | Retry attempts on failure.                                        |
+| `retryDelay`                 | —                  | Delay between retries (ms).                                       |
+| `retryStatusCodes`           | —                  | Comma-separated codes that trigger a retry, e.g. `429,500,503`.   |
+| `responseType`               | auto               | Force `json` or `text`.                                           |
+| `ignoreResponseError`        | `false`            | Don't fail on non-2xx (also skips status-based retry).            |
+| `bearerToken`                | —                  | Bearer token (no `Bearer ` prefix).                               |
+| `username` / `password`      | —                  | Basic authentication.                                             |
+| `files`                      | —                  | JSON map of field → path or array of paths (multipart/form-data). |
+| `file`                       | —                  | Single file path (application/octet-stream).                      |
+| `responseFile`               | —                  | Persist the response body to this path.                           |
+| `maskResponse`               | `false`            | Mask the response value in logs.                                  |
+| `ignoreStatusCodes`          | —                  | Comma-separated codes treated as success.                         |
+| `preventFailureOnNoResponse` | `false`            | Don't fail on a network error.                                    |
 
 ## Outputs
 
-| Output | Description |
-|---|---|
-| `response` | Response body (JSON string or raw text). |
-| `headers` | Response headers as a JSON object string. |
-| `status` | HTTP status code. |
+| Output         | Description                                         |
+| -------------- | --------------------------------------------------- |
+| `response`     | Response body (JSON string or raw text).            |
+| `headers`      | Response headers as a JSON object string.           |
+| `status`       | HTTP status code.                                   |
 | `requestError` | On failure: JSON `{ name, message, status, data }`. |
 
 ## Examples
@@ -1752,19 +1795,19 @@ Set them on the step `env`:
 
 ## Migrating from `fjogeleit/http-request-action`
 
-| http-request-action | ofetch-action |
-|---|---|
-| `data` | `body` |
-| `customHeaders` | `headers` |
-| `retryWait` | `retryDelay` |
-| `bearerToken` | `bearerToken` (same) |
-| `username` / `password` | `username` / `password` (same) |
-| `files` / `file` | `files` / `file` (same; arrays now supported) |
-| `ignoreStatusCodes` | `ignoreStatusCodes` (same) |
-| `responseFile` | `responseFile` (same) |
-| `maskResponse` | `maskResponse` (same) |
-| `preventFailureOnNoResponse` | `preventFailureOnNoResponse` (same) |
-| output `requestError` | output `requestError` (same) |
+| http-request-action          | ofetch-action                                 |
+| ---------------------------- | --------------------------------------------- |
+| `data`                       | `body`                                        |
+| `customHeaders`              | `headers`                                     |
+| `retryWait`                  | `retryDelay`                                  |
+| `bearerToken`                | `bearerToken` (same)                          |
+| `username` / `password`      | `username` / `password` (same)                |
+| `files` / `file`             | `files` / `file` (same; arrays now supported) |
+| `ignoreStatusCodes`          | `ignoreStatusCodes` (same)                    |
+| `responseFile`               | `responseFile` (same)                         |
+| `maskResponse`               | `maskResponse` (same)                         |
+| `preventFailureOnNoResponse` | `preventFailureOnNoResponse` (same)           |
+| output `requestError`        | output `requestError` (same)                  |
 
 > mTLS / client-certificate inputs (`httpsCA`, `httpsCert`, `httpsKey`, `ignoreSsl`) are not supported.
 

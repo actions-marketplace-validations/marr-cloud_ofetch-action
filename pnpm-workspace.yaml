@@ -1,6 +1,6 @@
 # https://pnpm.io/settings
 
-allowBuilds: { '@parcel/watcher': true }
+allowBuilds: { "@parcel/watcher": true }
 blockExoticSubdeps: true
 dedupePeers: true
 ignoreWorkspaceRootCheck: true
