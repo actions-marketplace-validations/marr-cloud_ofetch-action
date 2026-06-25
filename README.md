@@ -1,8 +1,5 @@
 # ofetch-action
 
-<!-- automd:badges color=blue -->
-<!-- /automd -->
-
 A GitHub Action for making HTTP requests, powered by [unjs/ofetch](https://github.com/unjs/ofetch) — a modern, lightweight `fetch` wrapper. A native-fetch alternative to axios-based `http-request-action`.
 
 ## Usage

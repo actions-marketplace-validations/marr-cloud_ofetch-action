@@ -12,7 +12,7 @@
   "scripts": {
     "build": "obuild",
     "dev": "vitest dev",
-    "fmt": "automd && oxlint . --fix && oxfmt .",
+    "fmt": "oxlint . --fix && oxfmt .",
     "lint": "oxlint . && oxfmt --check .",
     "test": "pnpm lint && pnpm typecheck && vitest run --coverage",
     "typecheck": "tsgo --noEmit --skipLibCheck"
@@ -23,7 +23,6 @@
     "@types/node": "latest",
     "@typescript/native-preview": "latest",
     "@vitest/coverage-v8": "latest",
-    "automd": "latest",
     "changelogen": "latest",
     "obuild": "latest",
     "ofetch": "^1.5.1",

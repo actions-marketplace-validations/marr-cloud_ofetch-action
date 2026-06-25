@@ -1,0 +1,4 @@
+# Normalize line endings to LF in the repo so the committed dist/ bundle is
+# byte-identical whether built on Windows or Linux (keeps the CI dist-sync check
+# stable across platforms).
+* text=auto eol=lf
