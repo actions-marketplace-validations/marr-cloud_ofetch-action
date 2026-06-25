@@ -59,6 +59,11 @@ describe("buildRequest", () => {
     expect((options.headers as Record<string, string>)["authorization"]).toBe("Bearer tok");
   });
 
+  it("ignores empty basic credentials", async () => {
+    const { options } = await buildRequest(baseInputs({ username: "", password: "" }));
+    expect((options.headers as Record<string, string>)["authorization"]).toBeUndefined();
+  });
+
   it("merges custom headers and body content-type", async () => {
     const { options } = await buildRequest(
       baseInputs({ method: "POST", headers: { "X-A": "1" }, body: "{}" }),

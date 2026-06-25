@@ -15,7 +15,7 @@ export async function buildRequest(inputs: ActionInputs): Promise<BuiltRequest> 
 
   if (inputs.bearerToken) {
     headers["authorization"] = `Bearer ${inputs.bearerToken}`;
-  } else if (inputs.username !== undefined && inputs.password !== undefined) {
+  } else if (inputs.username && inputs.password) {
     const token = Buffer.from(`${inputs.username}:${inputs.password}`).toString("base64");
     headers["authorization"] = `Basic ${token}`;
   }
