@@ -1,4 +1,5 @@
+import * as core from "@actions/core";
 import { ofetch } from "ofetch";
+import { run } from "./run.ts";
 
-// Temporary smoke entry — replaced in Task 6.
-export const fetchImpl = ofetch;
+await run(core, ofetch);

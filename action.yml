@@ -1,23 +1,88 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: ofetch HTTP Request
+description: Make HTTP requests from your workflow using unjs/ofetch, a modern fetch wrapper.
+author: marr-cloud
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: heart
-  color: red
+  icon: send
+  color: blue
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  url:
+    description: Request URL (absolute, or relative when baseURL is set).
     required: true
-    default: "1000"
+  method:
+    description: HTTP method.
+    default: GET
+  baseURL:
+    description: Base URL prepended to url.
+    required: false
+  body:
+    description: Request body. Sent as-is; a JSON string is not re-encoded.
+    required: false
+  query:
+    description: Query parameters as a JSON object string, e.g. '{"page":"1"}'.
+    required: false
+  headers:
+    description: Extra request headers as a JSON object string.
+    required: false
+  contentType:
+    description: Content-Type for the request body.
+    default: application/json
+  timeout:
+    description: Request timeout in milliseconds.
+    required: false
+  retry:
+    description: Number of retry attempts on failure.
+    required: false
+  retryDelay:
+    description: Delay between retries in milliseconds.
+    required: false
+  retryStatusCodes:
+    description: Comma-separated status codes that trigger a retry, e.g. "429,500,503".
+    required: false
+  responseType:
+    description: Force response parsing as "json" or "text". Auto-detected when unset.
+    required: false
+  ignoreResponseError:
+    description: Do not fail on non-2xx responses (also skips status-based retry).
+    default: "false"
+  bearerToken:
+    description: Bearer token without the "Bearer " prefix. Sent as the Authorization header.
+    required: false
+  username:
+    description: Username for Basic authentication.
+    required: false
+  password:
+    description: Password for Basic authentication.
+    required: false
+  files:
+    description: 'JSON map of field name to a file path or array of paths, sent as multipart/form-data, e.g. ''{"report":["a.html","b.json"]}''.'
+    required: false
+  file:
+    description: Path to a single file sent as application/octet-stream.
+    required: false
+  responseFile:
+    description: Persist the response body to this file path.
+    required: false
+  maskResponse:
+    description: Mask the response value in logs.
+    default: "false"
+  ignoreStatusCodes:
+    description: Comma-separated status codes treated as success (no failure).
+    required: false
+  preventFailureOnNoResponse:
+    description: Do not fail when no response is received (network error).
+    default: "false"
 
-# Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  response:
+    description: Response body (JSON serialized to a string, or raw text).
+  headers:
+    description: Response headers as a JSON object string.
+  status:
+    description: HTTP status code.
+  requestError:
+    description: On failure, a JSON string with name, message, status, and data.
 
 runs:
   using: node24
