@@ -1,0 +1,28 @@
+# Real end-to-end exercise of the built action against a runner-local echo
+# server. Runs on the self-hosted runner (marr-cloud/gh-runner), so it is
+# manual (workflow_dispatch) — trigger it when that runner is online. It is
+# intentionally kept out of the push/PR CI so it never blocks when the runner
+# is offline.
+name: self-test
+on: { workflow_dispatch: {} }
+jobs:
+  self-test:
+    runs-on: [self-hosted]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Start echo server
+        run: |
+          node -e 'require("http").createServer((q,s)=>{let b=[];q.on("data",c=>b.push(c));q.on("end",()=>{s.writeHead(200,{"content-type":"application/json"});s.end(JSON.stringify({ok:true,method:q.method}))})}).listen(8080,"127.0.0.1",()=>console.log("up"))' &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/ >/dev/null && break || sleep 0.25; done
+      - name: Use the action
+        id: req
+        uses: ./
+        with:
+          url: http://127.0.0.1:8080/
+          method: POST
+          body: '{"hello":"world"}'
+      - name: Assert outputs
+        run: |
+          echo "status=${{ steps.req.outputs.status }}"
+          test "${{ steps.req.outputs.status }}" = "200"
+          echo '${{ steps.req.outputs.response }}' | grep -q '"ok":true'
